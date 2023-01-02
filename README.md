@@ -1,6 +1,57 @@
-# Getting Started with Create React App
+# Authorization with Metamask
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+In this article, I will discuss the authorization method that should be used in decentralized applications (dApps) with MetaMask.
+
+I assume that you know that login and register operations in dapps projects are done through wallet applications such as Metamask. Wallet applications save us the cost of preparing login, register pages and infrastructure of these with the functions they provide. In addition to this, these wallet structures also offer us many other features, one example of which can be the authorization system. The authorization system should be as follows in traditional architecture:
+
+<img src="https://miro.medium.com/max/1400/1*W4nzXMZkOmhXns22ieNExA.webp"/>
+
+In this architecture, as we see, we make transactions with the Wallet address received in the backend and produce a token, and then send it to the frontend. This token is sent to the backend with the requests in the header, and authorization is provided.
+
+We can easily achieve all of these with function provided to us by wallet applications. Here is the architecture:
+
+<img src="https://miro.medium.com/max/1400/1*Qn3-f4xD9eLhXgarDHANjw.webp"/>
+
+Here, as we see, wallet applications already produce a token for us. When we send this token to the backend and verify it, we can obtain the necessary information on the backend. Now, let’s examine how we can implement these in code.
+
+```javascript
+const [account, setAccount] = useState("isn't connected");
+
+const connectWallet = async () => {
+  if (!window.ethereum) {
+    window.open("https://metamask.io/download/");
+  } else {
+    let accounts = await window.ethereum
+      .request({ method: "eth_requestAccounts" })
+      .catch((err) => {
+        console.error(err);
+      });
+
+    setAccount(accounts[0]);
+    const token = await signWallet();
+
+    axios.post("/registration", {
+      headers: {
+        Authorization: token,
+      },
+    });
+  }
+};
+
+const signWallet = async () => {
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
+
+  const signedMessage = await signer
+    .signMessage("Message: This should be nonce value")
+    .catch((err) => {
+      console.error(err);
+    });
+
+  return signedMessage;
+};
+
+As we can see on the code, after the user logs in using the connectWallet function, the signWallet function produces a token for us using the ethers library. With this produced token, we can now use it in api requests such as post made by the user.
 
 ## Available Scripts
 
@@ -13,58 +64,3 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
