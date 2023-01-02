@@ -52,6 +52,7 @@ const signWallet = async () => {
 };
 
 As we can see on the code, after the user logs in using the connectWallet function, the signWallet function produces a token for us using the ethers library. With this produced token, we can now use it in api requests such as post made by the user.
+```
 
 ## Available Scripts
 
